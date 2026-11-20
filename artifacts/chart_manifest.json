@@ -1,0 +1,62 @@
+{
+  "created_at": "2026-11-13T13:08:30.539732+00:00",
+  "renderer": "Windows .NET Framework DataVisualization (offline fallback)",
+  "charts": [
+    {
+      "name": "shelter_pressure",
+      "title": "How close are shelters to reported capacity?",
+      "explanation": "Compare the occupancy lines with the dashed threshold. Each ratio is weighted by its own reported actual capacity. The threshold is illustrative.",
+      "sources": [
+        "data/processed/shelter_daily.csv",
+        "artifacts/shelter_forecasts.csv"
+      ],
+      "png": "charts/shelter_pressure.png"
+    },
+    {
+      "name": "shelter_backtest",
+      "title": "Did our 7-day predictions match what happened?",
+      "explanation": "The orange prediction should follow the blue actual series. The dashed line is the persistence baseline. This example does not represent every sector or horizon.",
+      "sources": [
+        "artifacts/shelter_backtest.csv",
+        "data/processed/shelter_daily.csv"
+      ],
+      "png": "charts/shelter_backtest.png"
+    },
+    {
+      "name": "backlog_projection",
+      "title": "How has the housing waiting list changed?",
+      "explanation": "Blue shows published history. Orange dots are forecasts and vertical bars show empirical uncertainty, without guaranteed coverage. The gray dashed line is persistence.",
+      "sources": [
+        "data/processed/waitlist.csv",
+        "artifacts/backlog_forecasts.csv"
+      ],
+      "png": "charts/backlog_projection.png"
+    },
+    {
+      "name": "backlog_model_errors",
+      "title": "Did the backlog model beat a simple baseline?",
+      "explanation": "Compare bars within each horizon. The orange model has larger errors than persistence. Keep the baseline visible when presenting model performance.",
+      "sources": [
+        "artifacts/backlog_metrics.csv"
+      ],
+      "png": "charts/backlog_model_errors.png"
+    }
+  ],
+  "snapshot_downloaded_at": "2026-11-11T19:08:42.894201+00:00",
+  "source_sha256": {
+    "artifacts/backlog_forecasts.csv": "a53fd31e3e8f9b428807d1cd81502cffa39f6d813af52dfdf0a663e487efba69",
+    "artifacts/backlog_metrics.csv": "e2c3dc95bba59fc970a56fc1b7bb4fe1120ba17b4f436124c7383e45f1c2ba90",
+    "artifacts/shelter_backtest.csv": "0b889b3130759121663100f90d740cb5e30f7f2dc7ac65cd38ef96be25012951",
+    "artifacts/shelter_forecasts.csv": "3b11a49ec5044b83ae42c9e91d2500cf73ff942706a81340c8dfbf1504ef0ed2",
+    "data/processed/shelter_daily.csv": "4268d8a4731e236c59fb5345339d1fb1423c2ff387768f2b170697eed2c200d1",
+    "data/processed/waitlist.csv": "9de5fa473414157bda4a5d0cca64267abefe2599bbdaa7ba1c85cd81e18a5e24"
+  },
+  "chart_code_sha256": "19ad13f847bc5b74bf0fe3590e6829d1b9ff794db6056d5c85611b78ab2c74a8",
+  "windows_renderer_sha256": "bd905b586a355b8383f0fe65cefd425d56882111807868ff773a214af036ef74",
+  "image_sha256": {
+    "charts/shelter_pressure.png": "92b5f4cf37210c5bacad2f4aee9f602cf5356ef71367776231b004ac547f4b8b",
+    "charts/shelter_backtest.png": "2fd97c86f7e883c09a43986eeb45e1006e57265a43415cf751e2220ed6b41dae",
+    "charts/backlog_projection.png": "62fb2b4cbbeb5e342c82017d3575229402195038171d46dbd731546c4a743e6b",
+    "charts/backlog_model_errors.png": "5b6296d15095b8549e16a3849ce35e65769697f2937018d8eb999984a19c147e"
+  }
+}

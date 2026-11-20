@@ -1,0 +1,647 @@
+Daily shelter occupancy and actual capacity dataset pipeline report
+
+Team: Pod 2
+Members: Not supplied
+Pipeline command: python -m pod2 etl --as-of 2026-11-11
+Report status: Working prototype; integration dependencies remain
+
+1. Introduction
+One source observation describes a program at a location on a date, measured in beds or rooms. This pipeline supports citywide sector forecasting. It does not measure unmet demand or users' previous neighbourhoods.
+
+Source inventory and immutable snapshot hashes
+[
+  {
+    "pipeline": "shelter",
+    "package": "daily-shelter-overnight-service-occupancy-capacity",
+    "resource_id": "42714176-4f05-44e6-b157-2b57f29b856a",
+    "resource_name": "Daily shelter overnight occupancy",
+    "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/42714176-4f05-44e6-b157-2b57f29b856a",
+    "path": "data\\raw\\20261111T190842894201Z\\shelter_42714176-4f05-44e6-b157-2b57f29b856a.csv",
+    "sha256": "76f1888e841279ad6c7992fa841e6b9ef47b4a10cb8742b946e7a34599a4ddfc",
+    "metadata_modified": "2026-11-11T14:23:21.087399",
+    "bytes": 12165307
+  },
+  {
+    "pipeline": "shelter",
+    "package": "daily-shelter-overnight-service-occupancy-capacity",
+    "resource_id": "5dc4fbfc-0951-45e8-ae30-962af9dcaf7c",
+    "resource_name": "daily-shelter-overnight-service-occupancy-capacity-2025",
+    "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/5dc4fbfc-0951-45e8-ae30-962af9dcaf7c",
+    "path": "data\\raw\\20261111T190842894201Z\\shelter_5dc4fbfc-0951-45e8-ae30-962af9dcaf7c.csv",
+    "sha256": "229dd1791055edee38618d781b1e06a8eea2877b649a7672b008b79247bf828c",
+    "metadata_modified": "2026-04-16T13:38:38.195969",
+    "bytes": 14907076
+  },
+  {
+    "pipeline": "shelter",
+    "package": "daily-shelter-overnight-service-occupancy-capacity",
+    "resource_id": "fc409fd7-0348-49d7-bba9-70ac1a8c727c",
+    "resource_name": "daily-shelter-overnight-service-occupancy-capacity-2024",
+    "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/fc409fd7-0348-49d7-bba9-70ac1a8c727c",
+    "path": "data\\raw\\20261111T190842894201Z\\shelter_fc409fd7-0348-49d7-bba9-70ac1a8c727c.csv",
+    "sha256": "11aa03fb45d6cddab86250c0813c554951acb22ec1a469c9d27d6619b3db474b",
+    "metadata_modified": "2026-02-20T17:32:29.709638",
+    "bytes": 14071890
+  },
+  {
+    "pipeline": "shelter",
+    "package": "daily-shelter-overnight-service-occupancy-capacity",
+    "resource_id": "62786156-b463-4c04-b286-c23f32c726ab",
+    "resource_name": "daily-shelter-overnight-service-occupancy-capacity-2023",
+    "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/62786156-b463-4c04-b286-c23f32c726ab",
+    "path": "data\\raw\\20261111T190842894201Z\\shelter_62786156-b463-4c04-b286-c23f32c726ab.csv",
+    "sha256": "ebd7b1cade4382aba333197f711482b835071af835e2d8ee9ee41fee33b8b8bd",
+    "metadata_modified": "2026-02-20T17:32:47.186787",
+    "bytes": 14952981
+  },
+  {
+    "pipeline": "shelter",
+    "package": "daily-shelter-overnight-service-occupancy-capacity",
+    "resource_id": "1cc46acb-c6d3-4537-93ef-3ebad039275c",
+    "resource_name": "daily-shelter-overnight-service-occupancy-capacity-2022",
+    "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/1cc46acb-c6d3-4537-93ef-3ebad039275c",
+    "path": "data\\raw\\20261111T190842894201Z\\shelter_1cc46acb-c6d3-4537-93ef-3ebad039275c.csv",
+    "sha256": "196a58c02cd9f30689dab2a9f249a1b6fce4b013b0be078a94f31a29d6c31dd9",
+    "metadata_modified": "2026-02-20T17:33:05.159394",
+    "bytes": 14814332
+  },
+  {
+    "pipeline": "shelter",
+    "package": "daily-shelter-overnight-service-occupancy-capacity",
+    "resource_id": "da8854b8-e570-4de2-b051-a906b62fe7f8",
+    "resource_name": "daily-shelter-overnight-service-occupancy-capacity-2021",
+    "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/da8854b8-e570-4de2-b051-a906b62fe7f8",
+    "path": "data\\raw\\20261111T190842894201Z\\shelter_da8854b8-e570-4de2-b051-a906b62fe7f8.csv",
+    "sha256": "e297917c87fe07ff80ebb1feb6029752faf1bedf5dd54759180285f17a49e1c1",
+    "metadata_modified": "2026-02-20T17:33:22.293167",
+    "bytes": 15253017
+  }
+]
+
+2. Data cleaning
+Whitespace and numeric text are normalized. Historical YY-MM-DD dates are parsed year first; modern ISO dates are parsed separately. Missing location IDs use location=unknown and program-based site IDs. Missing counts remain null. Invalid occupancy or nonpositive actual capacity is retained and flagged; incomplete sector totals are excluded from training. Exact duplicates are collapsed; conflicting natural keys fail the run.
+
+3. Mapping to the events table
+event_id: SHA256 of pipeline plus natural key (date, program, location or explicit unknown, capacity type), excluding mutable counts.
+source and modality: toronto_shelter; constant per pipeline table.
+anon_id: SHA256 of the public site identifier; no person's name.
+site_id: published shelter location ID, program ID if location missing, otherwise Toronto for citywide quarterly sources.
+zone: published shelter address, otherwise null.
+event_time: observation date or quarter start at Toronto midnight, converted to UTC with daylight saving.
+text_input: null.
+payload: separately named facts; see sample JSON for each resource and source-column correspondence. Includes resourceid, sourcerow, snapshot availableat and availabilitybasis. Snapshot download time is not the original historical release date.
+consent_method: public_data.
+consent_scope: analytics and research.
+privacy_token: public.
+geo_json: null pending boundary enrichment.
+ingested_at: database default, preserved on updates.
+Schema is provisional pending the official KinesisIQ schema.
+
+Payload field definitions and examples
+Resource 42714176-4f05-44e6-b157-2b57f29b856a
+{
+  "program": "16892",
+  "location": "1320",
+  "sector": "Families",
+  "unit": "rooms",
+  "resourceid": "42714176-4f05-44e6-b157-2b57f29b856a",
+  "sourcerow": "1",
+  "programname": "COSTI - Hotel Program - Dixon (Refugee Families)",
+  "occupied": 132,
+  "capacity": 149,
+  "locationmissing": false,
+  "valid": true,
+  "overcapacity": false,
+  "occupancyrate": 0.8859060402684564,
+  "availableat": "2026-11-11T19:08:42.894201+00:00",
+  "availabilitybasis": "snapshot_download"
+}
+Resource 5dc4fbfc-0951-45e8-ae30-962af9dcaf7c
+{
+  "program": "11891",
+  "location": "1300",
+  "sector": "Men",
+  "unit": "beds",
+  "resourceid": "5dc4fbfc-0951-45e8-ae30-962af9dcaf7c",
+  "sourcerow": "1",
+  "programname": "Scott Mission - Men's Ministry Overnight Program",
+  "occupied": 71,
+  "capacity": 71,
+  "locationmissing": false,
+  "valid": true,
+  "overcapacity": false,
+  "occupancyrate": 1.0,
+  "availableat": "2026-11-11T19:08:42.894201+00:00",
+  "availabilitybasis": "snapshot_download"
+}
+Resource fc409fd7-0348-49d7-bba9-70ac1a8c727c
+{
+  "program": "16892",
+  "location": "1320",
+  "sector": "Families",
+  "unit": "rooms",
+  "resourceid": "fc409fd7-0348-49d7-bba9-70ac1a8c727c",
+  "sourcerow": "1",
+  "programname": "COSTI - Hotel Program - Dixon (Refugee Families)",
+  "occupied": 149,
+  "capacity": 149,
+  "locationmissing": false,
+  "valid": true,
+  "overcapacity": false,
+  "occupancyrate": 1.0,
+  "availableat": "2026-11-11T19:08:42.894201+00:00",
+  "availabilitybasis": "snapshot_download"
+}
+Resource 62786156-b463-4c04-b286-c23f32c726ab
+{
+  "program": "16892",
+  "location": "1320",
+  "sector": "Families",
+  "unit": "rooms",
+  "resourceid": "62786156-b463-4c04-b286-c23f32c726ab",
+  "sourcerow": "1",
+  "programname": "COSTI - Hotel Program - Dixon (Refugee Families)",
+  "occupied": 148,
+  "capacity": 148,
+  "locationmissing": false,
+  "valid": true,
+  "overcapacity": false,
+  "occupancyrate": 1.0,
+  "availableat": "2026-11-11T19:08:42.894201+00:00",
+  "availabilitybasis": "snapshot_download"
+}
+Resource 1cc46acb-c6d3-4537-93ef-3ebad039275c
+{
+  "program": "16192",
+  "location": "1103",
+  "sector": "Men",
+  "unit": "rooms",
+  "resourceid": "1cc46acb-c6d3-4537-93ef-3ebad039275c",
+  "sourcerow": "1",
+  "programname": "COSTI North York West Hotel Program - Men",
+  "occupied": 48,
+  "capacity": 48,
+  "locationmissing": false,
+  "valid": true,
+  "overcapacity": false,
+  "occupancyrate": 1.0,
+  "availableat": "2026-11-11T19:08:42.894201+00:00",
+  "availabilitybasis": "snapshot_download"
+}
+Resource da8854b8-e570-4de2-b051-a906b62fe7f8
+{
+  "program": "15371",
+  "location": "1103",
+  "sector": "Families",
+  "unit": "rooms",
+  "resourceid": "da8854b8-e570-4de2-b051-a906b62fe7f8",
+  "sourcerow": "1",
+  "programname": "COSTI North York West Hotel - Family Program",
+  "occupied": 26,
+  "capacity": 29,
+  "locationmissing": false,
+  "valid": true,
+  "overcapacity": false,
+  "occupancyrate": 0.896551724137931,
+  "availableat": "2026-11-11T19:08:42.894201+00:00",
+  "availabilitybasis": "snapshot_download"
+}
+
+4. Sample mapped data
+Real source rows with publisher column names and mapped events:
+[
+  {
+    "pipeline": "shelter",
+    "source_row": {
+      "_id": "1",
+      "OCCUPANCY_DATE": "2026-01-01",
+      "ORGANIZATION_ID": "24",
+      "ORGANIZATION_NAME": "COSTI Immigrant Services",
+      "SHELTER_ID": "40",
+      "SHELTER_GROUP": "COSTI Reception Centre",
+      "LOCATION_ID": "1320",
+      "LOCATION_NAME": "COSTI Hotel Program Dixon",
+      "LOCATION_ADDRESS": "640 Dixon Rd.",
+      "LOCATION_POSTAL_CODE": "M9W 1J1",
+      "LOCATION_CITY": "Toronto",
+      "LOCATION_PROVINCE": "ON",
+      "PROGRAM_ID": "16892",
+      "PROGRAM_NAME": "COSTI - Hotel Program - Dixon (Refugee Families)",
+      "SECTOR": "Families",
+      "PROGRAM_MODEL": "Emergency",
+      "OVERNIGHT_SERVICE_TYPE": "Motel/Hotel Shelter",
+      "PROGRAM_AREA": "Temporary Refugee Response",
+      "SERVICE_USER_COUNT": "538",
+      "CAPACITY_TYPE": "Room Based Capacity",
+      "CAPACITY_ACTUAL_BED": "",
+      "CAPACITY_FUNDING_BED": "",
+      "OCCUPIED_BEDS": "",
+      "UNOCCUPIED_BEDS": "",
+      "UNAVAILABLE_BEDS": "",
+      "CAPACITY_ACTUAL_ROOM": "149",
+      "CAPACITY_FUNDING_ROOM": "149",
+      "OCCUPIED_ROOMS": "132",
+      "UNOCCUPIED_ROOMS": "17",
+      "UNAVAILABLE_ROOMS": "0",
+      "OCCUPANCY_RATE_BEDS": "",
+      "OCCUPANCY_RATE_ROOMS": "88.59"
+    },
+    "mapped_event": {
+      "event_id": "4ff2c89d10c241d40d32bb949c06d6a48d072eb6eb83d6ae9adcfe027a70c4d6",
+      "source": "toronto_shelter",
+      "anon_id": "bff8276b309ba8b6a4012e419b61d8bfe631bfdc1d7f4df4040951d3e8b056d5",
+      "site_id": "location:1320",
+      "zone": "640 Dixon Rd.",
+      "event_time": "2026-01-01T05:00:00+00:00",
+      "modality": "toronto_shelter",
+      "text_input": null,
+      "payload": {
+        "program": "16892",
+        "location": "1320",
+        "sector": "Families",
+        "unit": "rooms",
+        "resourceid": "42714176-4f05-44e6-b157-2b57f29b856a",
+        "sourcerow": "1",
+        "programname": "COSTI - Hotel Program - Dixon (Refugee Families)",
+        "occupied": 132,
+        "capacity": 149,
+        "locationmissing": false,
+        "valid": true,
+        "overcapacity": false,
+        "occupancyrate": 0.8859060402684564,
+        "availableat": "2026-11-11T19:08:42.894201+00:00",
+        "availabilitybasis": "snapshot_download"
+      },
+      "consent_method": "public_data",
+      "consent_scope": [
+        "analytics",
+        "research"
+      ],
+      "privacy_token": "public",
+      "geo_json": null
+    }
+  },
+  {
+    "pipeline": "shelter",
+    "source_row": {
+      "_id": "1",
+      "OCCUPANCY_DATE": "2025-01-01",
+      "ORGANIZATION_ID": "5",
+      "ORGANIZATION_NAME": "The Scott Mission Inc.",
+      "SHELTER_ID": "8",
+      "SHELTER_GROUP": "Scott Mission Men's Ministry",
+      "LOCATION_ID": "1300",
+      "LOCATION_NAME": "The Scott Mission - Kensington location",
+      "LOCATION_ADDRESS": "346 Spadina Ave.",
+      "LOCATION_POSTAL_CODE": "M5T 1J5",
+      "LOCATION_CITY": "Toronto",
+      "LOCATION_PROVINCE": "ON",
+      "PROGRAM_ID": "11891",
+      "PROGRAM_NAME": "Scott Mission - Men's Ministry Overnight Program",
+      "SECTOR": "Men",
+      "PROGRAM_MODEL": "Emergency",
+      "OVERNIGHT_SERVICE_TYPE": "Shelter",
+      "PROGRAM_AREA": "Base Shelter and Overnight Services System",
+      "SERVICE_USER_COUNT": "71",
+      "CAPACITY_TYPE": "Bed Based Capacity",
+      "CAPACITY_ACTUAL_BED": "71",
+      "CAPACITY_FUNDING_BED": "71",
+      "OCCUPIED_BEDS": "71",
+      "UNOCCUPIED_BEDS": "0",
+      "UNAVAILABLE_BEDS": "0",
+      "CAPACITY_ACTUAL_ROOM": "",
+      "CAPACITY_FUNDING_ROOM": "",
+      "OCCUPIED_ROOMS": "",
+      "UNOCCUPIED_ROOMS": "",
+      "UNAVAILABLE_ROOMS": "",
+      "OCCUPANCY_RATE_BEDS": "100",
+      "OCCUPANCY_RATE_ROOMS": ""
+    },
+    "mapped_event": {
+      "event_id": "287d0a7435c839263d2e173a623c6fb0a67a426e2e9ae6c4c80e520bfe766db6",
+      "source": "toronto_shelter",
+      "anon_id": "f7435f642437fcf24d40580fd098fbb4db9e5b3a753c7af08074126ec08991de",
+      "site_id": "location:1300",
+      "zone": "346 Spadina Ave.",
+      "event_time": "2025-01-01T05:00:00+00:00",
+      "modality": "toronto_shelter",
+      "text_input": null,
+      "payload": {
+        "program": "11891",
+        "location": "1300",
+        "sector": "Men",
+        "unit": "beds",
+        "resourceid": "5dc4fbfc-0951-45e8-ae30-962af9dcaf7c",
+        "sourcerow": "1",
+        "programname": "Scott Mission - Men's Ministry Overnight Program",
+        "occupied": 71,
+        "capacity": 71,
+        "locationmissing": false,
+        "valid": true,
+        "overcapacity": false,
+        "occupancyrate": 1.0,
+        "availableat": "2026-11-11T19:08:42.894201+00:00",
+        "availabilitybasis": "snapshot_download"
+      },
+      "consent_method": "public_data",
+      "consent_scope": [
+        "analytics",
+        "research"
+      ],
+      "privacy_token": "public",
+      "geo_json": null
+    }
+  },
+  {
+    "pipeline": "shelter",
+    "source_row": {
+      "_id": "1",
+      "OCCUPANCY_DATE": "2024-01-01",
+      "ORGANIZATION_ID": "24",
+      "ORGANIZATION_NAME": "COSTI Immigrant Services",
+      "SHELTER_ID": "40",
+      "SHELTER_GROUP": "COSTI Reception Centre",
+      "LOCATION_ID": "1320",
+      "LOCATION_NAME": "COSTI Hotel Program Dixon",
+      "LOCATION_ADDRESS": "640 Dixon Rd.",
+      "LOCATION_POSTAL_CODE": "M9W 1J1",
+      "LOCATION_CITY": "Toronto",
+      "LOCATION_PROVINCE": "ON",
+      "PROGRAM_ID": "16892",
+      "PROGRAM_NAME": "COSTI - Hotel Program - Dixon (Refugee Families)",
+      "SECTOR": "Families",
+      "PROGRAM_MODEL": "Emergency",
+      "OVERNIGHT_SERVICE_TYPE": "Motel/Hotel Shelter",
+      "PROGRAM_AREA": "Temporary Refugee Response",
+      "SERVICE_USER_COUNT": "650",
+      "CAPACITY_TYPE": "Room Based Capacity",
+      "CAPACITY_ACTUAL_BED": "",
+      "CAPACITY_FUNDING_BED": "",
+      "OCCUPIED_BEDS": "",
+      "UNOCCUPIED_BEDS": "",
+      "UNAVAILABLE_BEDS": "",
+      "CAPACITY_ACTUAL_ROOM": "149",
+      "CAPACITY_FUNDING_ROOM": "150",
+      "OCCUPIED_ROOMS": "149",
+      "UNOCCUPIED_ROOMS": "0",
+      "UNAVAILABLE_ROOMS": "1",
+      "OCCUPANCY_RATE_BEDS": "",
+      "OCCUPANCY_RATE_ROOMS": "100"
+    },
+    "mapped_event": {
+      "event_id": "9cccacc895bd7a5dfb622f681768e9746bd731d5ecfa0ee7be007ff55069ad67",
+      "source": "toronto_shelter",
+      "anon_id": "bff8276b309ba8b6a4012e419b61d8bfe631bfdc1d7f4df4040951d3e8b056d5",
+      "site_id": "location:1320",
+      "zone": "640 Dixon Rd.",
+      "event_time": "2024-01-01T05:00:00+00:00",
+      "modality": "toronto_shelter",
+      "text_input": null,
+      "payload": {
+        "program": "16892",
+        "location": "1320",
+        "sector": "Families",
+        "unit": "rooms",
+        "resourceid": "fc409fd7-0348-49d7-bba9-70ac1a8c727c",
+        "sourcerow": "1",
+        "programname": "COSTI - Hotel Program - Dixon (Refugee Families)",
+        "occupied": 149,
+        "capacity": 149,
+        "locationmissing": false,
+        "valid": true,
+        "overcapacity": false,
+        "occupancyrate": 1.0,
+        "availableat": "2026-11-11T19:08:42.894201+00:00",
+        "availabilitybasis": "snapshot_download"
+      },
+      "consent_method": "public_data",
+      "consent_scope": [
+        "analytics",
+        "research"
+      ],
+      "privacy_token": "public",
+      "geo_json": null
+    }
+  },
+  {
+    "pipeline": "shelter",
+    "source_row": {
+      "_id": "1",
+      "OCCUPANCY_DATE": "2023-01-01T00:00:00",
+      "ORGANIZATION_ID": "24",
+      "ORGANIZATION_NAME": "COSTI Immigrant Services",
+      "SHELTER_ID": "40",
+      "SHELTER_GROUP": "COSTI Reception Centre",
+      "LOCATION_ID": "1320",
+      "LOCATION_NAME": "COSTI Hotel Program Dixon",
+      "LOCATION_ADDRESS": "640 Dixon Rd.",
+      "LOCATION_POSTAL_CODE": "M9W 1J1",
+      "LOCATION_CITY": "Toronto",
+      "LOCATION_PROVINCE": "ON",
+      "PROGRAM_ID": "16892",
+      "PROGRAM_NAME": "COSTI - Hotel Program - Dixon (Refugee Families)",
+      "SECTOR": "Families",
+      "PROGRAM_MODEL": "Emergency",
+      "OVERNIGHT_SERVICE_TYPE": "Motel/Hotel Shelter",
+      "PROGRAM_AREA": "Temporary Refugee Response",
+      "SERVICE_USER_COUNT": "614",
+      "CAPACITY_TYPE": "Room Based Capacity",
+      "CAPACITY_ACTUAL_BED": "",
+      "CAPACITY_FUNDING_BED": "",
+      "OCCUPIED_BEDS": "",
+      "UNOCCUPIED_BEDS": "",
+      "UNAVAILABLE_BEDS": "",
+      "CAPACITY_ACTUAL_ROOM": "148",
+      "CAPACITY_FUNDING_ROOM": "150",
+      "OCCUPIED_ROOMS": "148",
+      "UNOCCUPIED_ROOMS": "0",
+      "UNAVAILABLE_ROOMS": "2",
+      "OCCUPANCY_RATE_BEDS": "",
+      "OCCUPANCY_RATE_ROOMS": "100"
+    },
+    "mapped_event": {
+      "event_id": "71266bfe630d7f8f63abe315dc8687120bdc8e290ef6fc2ec47606e1d848f262",
+      "source": "toronto_shelter",
+      "anon_id": "bff8276b309ba8b6a4012e419b61d8bfe631bfdc1d7f4df4040951d3e8b056d5",
+      "site_id": "location:1320",
+      "zone": "640 Dixon Rd.",
+      "event_time": "2023-01-01T05:00:00+00:00",
+      "modality": "toronto_shelter",
+      "text_input": null,
+      "payload": {
+        "program": "16892",
+        "location": "1320",
+        "sector": "Families",
+        "unit": "rooms",
+        "resourceid": "62786156-b463-4c04-b286-c23f32c726ab",
+        "sourcerow": "1",
+        "programname": "COSTI - Hotel Program - Dixon (Refugee Families)",
+        "occupied": 148,
+        "capacity": 148,
+        "locationmissing": false,
+        "valid": true,
+        "overcapacity": false,
+        "occupancyrate": 1.0,
+        "availableat": "2026-11-11T19:08:42.894201+00:00",
+        "availabilitybasis": "snapshot_download"
+      },
+      "consent_method": "public_data",
+      "consent_scope": [
+        "analytics",
+        "research"
+      ],
+      "privacy_token": "public",
+      "geo_json": null
+    }
+  },
+  {
+    "pipeline": "shelter",
+    "source_row": {
+      "_id": "1",
+      "OCCUPANCY_DATE": "22-01-01",
+      "ORGANIZATION_ID": "24",
+      "ORGANIZATION_NAME": "COSTI Immigrant Services",
+      "SHELTER_ID": "40",
+      "SHELTER_GROUP": "COSTI Reception Centre",
+      "LOCATION_ID": "1103",
+      "LOCATION_NAME": "SSHA North York West Hotel Program",
+      "LOCATION_ADDRESS": "1677 Wilson Ave",
+      "LOCATION_POSTAL_CODE": "M3L 1A5",
+      "LOCATION_CITY": "North York",
+      "LOCATION_PROVINCE": "ON",
+      "PROGRAM_ID": "16192",
+      "PROGRAM_NAME": "COSTI North York West Hotel Program - Men",
+      "SECTOR": "Men",
+      "PROGRAM_MODEL": "Emergency",
+      "OVERNIGHT_SERVICE_TYPE": "Motel/Hotel Shelter",
+      "PROGRAM_AREA": "COVID-19 Response",
+      "SERVICE_USER_COUNT": "49",
+      "CAPACITY_TYPE": "Room Based Capacity",
+      "CAPACITY_ACTUAL_BED": "",
+      "CAPACITY_FUNDING_BED": "",
+      "OCCUPIED_BEDS": "",
+      "UNOCCUPIED_BEDS": "",
+      "UNAVAILABLE_BEDS": "",
+      "CAPACITY_ACTUAL_ROOM": "48",
+      "CAPACITY_FUNDING_ROOM": "55",
+      "OCCUPIED_ROOMS": "48",
+      "UNOCCUPIED_ROOMS": "0",
+      "UNAVAILABLE_ROOMS": "7",
+      "OCCUPANCY_RATE_BEDS": "",
+      "OCCUPANCY_RATE_ROOMS": "100"
+    },
+    "mapped_event": {
+      "event_id": "c2a7c96abc123a39af3c377d0624ce2909ca18522da81c1f9cbd40e52303d823",
+      "source": "toronto_shelter",
+      "anon_id": "30e0db7a6867be356b5e39a5c18af0e4866538278ed428da97a8cfa421d1ce40",
+      "site_id": "location:1103",
+      "zone": "1677 Wilson Ave",
+      "event_time": "2022-01-01T05:00:00+00:00",
+      "modality": "toronto_shelter",
+      "text_input": null,
+      "payload": {
+        "program": "16192",
+        "location": "1103",
+        "sector": "Men",
+        "unit": "rooms",
+        "resourceid": "1cc46acb-c6d3-4537-93ef-3ebad039275c",
+        "sourcerow": "1",
+        "programname": "COSTI North York West Hotel Program - Men",
+        "occupied": 48,
+        "capacity": 48,
+        "locationmissing": false,
+        "valid": true,
+        "overcapacity": false,
+        "occupancyrate": 1.0,
+        "availableat": "2026-11-11T19:08:42.894201+00:00",
+        "availabilitybasis": "snapshot_download"
+      },
+      "consent_method": "public_data",
+      "consent_scope": [
+        "analytics",
+        "research"
+      ],
+      "privacy_token": "public",
+      "geo_json": null
+    }
+  },
+  {
+    "pipeline": "shelter",
+    "source_row": {
+      "_id": "1",
+      "OCCUPANCY_DATE": "21-01-01",
+      "ORGANIZATION_ID": "24",
+      "ORGANIZATION_NAME": "COSTI Immigrant Services",
+      "SHELTER_ID": "40",
+      "SHELTER_GROUP": "COSTI Reception Centre",
+      "LOCATION_ID": "1103",
+      "LOCATION_NAME": "COSTI/City North York West Hotel Program",
+      "LOCATION_ADDRESS": "1677 Wilson Ave",
+      "LOCATION_POSTAL_CODE": "M3L 1A5",
+      "LOCATION_CITY": "North York ",
+      "LOCATION_PROVINCE": "ON",
+      "PROGRAM_ID": "15371",
+      "PROGRAM_NAME": "COSTI North York West Hotel - Family Program",
+      "SECTOR": "Families",
+      "PROGRAM_MODEL": "Emergency",
+      "OVERNIGHT_SERVICE_TYPE": "Motel/Hotel Shelter",
+      "PROGRAM_AREA": "COVID-19 Response",
+      "SERVICE_USER_COUNT": "74",
+      "CAPACITY_TYPE": "Room Based Capacity",
+      "CAPACITY_ACTUAL_BED": "",
+      "CAPACITY_FUNDING_BED": "",
+      "OCCUPIED_BEDS": "",
+      "UNOCCUPIED_BEDS": "",
+      "UNAVAILABLE_BEDS": "",
+      "CAPACITY_ACTUAL_ROOM": "29",
+      "CAPACITY_FUNDING_ROOM": "58",
+      "OCCUPIED_ROOMS": "26",
+      "UNOCCUPIED_ROOMS": "3",
+      "UNAVAILABLE_ROOMS": "29",
+      "OCCUPANCY_RATE_BEDS": "",
+      "OCCUPANCY_RATE_ROOMS": "89.66"
+    },
+    "mapped_event": {
+      "event_id": "b2990c6280ee404918b6ec860f7dc74e4de7b927baefb05d5846746aec87e275",
+      "source": "toronto_shelter",
+      "anon_id": "30e0db7a6867be356b5e39a5c18af0e4866538278ed428da97a8cfa421d1ce40",
+      "site_id": "location:1103",
+      "zone": "1677 Wilson Ave",
+      "event_time": "2021-01-01T05:00:00+00:00",
+      "modality": "toronto_shelter",
+      "text_input": null,
+      "payload": {
+        "program": "15371",
+        "location": "1103",
+        "sector": "Families",
+        "unit": "rooms",
+        "resourceid": "da8854b8-e570-4de2-b051-a906b62fe7f8",
+        "sourcerow": "1",
+        "programname": "COSTI North York West Hotel - Family Program",
+        "occupied": 26,
+        "capacity": 29,
+        "locationmissing": false,
+        "valid": true,
+        "overcapacity": false,
+        "occupancyrate": 0.896551724137931,
+        "availableat": "2026-11-11T19:08:42.894201+00:00",
+        "availabilitybasis": "snapshot_download"
+      },
+      "consent_method": "public_data",
+      "consent_scope": [
+        "analytics",
+        "research"
+      ],
+      "privacy_token": "public",
+      "geo_json": null
+    }
+  }
+]
+
+5. Measures
+See measure_dictionary.csv for formulas, units and missing-value policies. backlog_measures.csv contains actual quarterly diagnostics. Shelter sector totals and missing_count are in data/processed/shelter_daily.csv. All statistics exclude undefined observations explicitly.
+
+6. Conclusion
+Ready to use: checksummed snapshots, validated clean tables, duplicate-safe local events and real mapped examples.
+Treat as provisional: revised historical snapshots, source omissions, missing numeric facts and official schema compatibility. A repeat load updates changed facts and prunes removed keys for each loaded source, while retaining ingested_at for unchanged event IDs.
+Not claimed: finer geography, waiting-time accuracy, future RGI supply, eviction correlations or operational readiness.

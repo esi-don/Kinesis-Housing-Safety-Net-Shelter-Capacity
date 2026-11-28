@@ -1,0 +1,125 @@
+{
+  "created_at": "2026-11-11T19:34:59.699087+00:00",
+  "as_of": "2026-11-11",
+  "python": "3.12.14",
+  "packages": {
+    "pandas": "2.2.3",
+    "numpy": "2.2.6",
+    "scipy": "1.15.2",
+    "scikit-learn": "1.6.1",
+    "joblib": "1.4.2",
+    "threadpoolctl": "3.5.0",
+    "tzdata": "2025.2",
+    "pytz": "2025.2",
+    "python-dateutil": "2.9.0.post0",
+    "six": "1.17.0"
+  },
+  "results": {
+    "shelter_forecasts": 27,
+    "backlog_forecasts": 3,
+    "cluster_groups": 2
+  },
+  "snapshot": {
+    "downloaded_at": "2026-11-11T19:08:42.894201+00:00",
+    "sources": [
+      {
+        "pipeline": "shelter",
+        "package": "daily-shelter-overnight-service-occupancy-capacity",
+        "resource_id": "42714176-4f05-44e6-b157-2b57f29b856a",
+        "resource_name": "Daily shelter overnight occupancy",
+        "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/42714176-4f05-44e6-b157-2b57f29b856a",
+        "path": "data\\raw\\20261111T190842894201Z\\shelter_42714176-4f05-44e6-b157-2b57f29b856a.csv",
+        "sha256": "76f1888e841279ad6c7992fa841e6b9ef47b4a10cb8742b946e7a34599a4ddfc",
+        "metadata_modified": "2026-11-11T14:23:21.087399",
+        "bytes": 12165307
+      },
+      {
+        "pipeline": "shelter",
+        "package": "daily-shelter-overnight-service-occupancy-capacity",
+        "resource_id": "5dc4fbfc-0951-45e8-ae30-962af9dcaf7c",
+        "resource_name": "daily-shelter-overnight-service-occupancy-capacity-2025",
+        "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/5dc4fbfc-0951-45e8-ae30-962af9dcaf7c",
+        "path": "data\\raw\\20261111T190842894201Z\\shelter_5dc4fbfc-0951-45e8-ae30-962af9dcaf7c.csv",
+        "sha256": "229dd1791055edee38618d781b1e06a8eea2877b649a7672b008b79247bf828c",
+        "metadata_modified": "2026-04-16T13:38:38.195969",
+        "bytes": 14907076
+      },
+      {
+        "pipeline": "shelter",
+        "package": "daily-shelter-overnight-service-occupancy-capacity",
+        "resource_id": "fc409fd7-0348-49d7-bba9-70ac1a8c727c",
+        "resource_name": "daily-shelter-overnight-service-occupancy-capacity-2024",
+        "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/fc409fd7-0348-49d7-bba9-70ac1a8c727c",
+        "path": "data\\raw\\20261111T190842894201Z\\shelter_fc409fd7-0348-49d7-bba9-70ac1a8c727c.csv",
+        "sha256": "11aa03fb45d6cddab86250c0813c554951acb22ec1a469c9d27d6619b3db474b",
+        "metadata_modified": "2026-02-20T17:32:29.709638",
+        "bytes": 14071890
+      },
+      {
+        "pipeline": "shelter",
+        "package": "daily-shelter-overnight-service-occupancy-capacity",
+        "resource_id": "62786156-b463-4c04-b286-c23f32c726ab",
+        "resource_name": "daily-shelter-overnight-service-occupancy-capacity-2023",
+        "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/62786156-b463-4c04-b286-c23f32c726ab",
+        "path": "data\\raw\\20261111T190842894201Z\\shelter_62786156-b463-4c04-b286-c23f32c726ab.csv",
+        "sha256": "ebd7b1cade4382aba333197f711482b835071af835e2d8ee9ee41fee33b8b8bd",
+        "metadata_modified": "2026-02-20T17:32:47.186787",
+        "bytes": 14952981
+      },
+      {
+        "pipeline": "shelter",
+        "package": "daily-shelter-overnight-service-occupancy-capacity",
+        "resource_id": "1cc46acb-c6d3-4537-93ef-3ebad039275c",
+        "resource_name": "daily-shelter-overnight-service-occupancy-capacity-2022",
+        "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/1cc46acb-c6d3-4537-93ef-3ebad039275c",
+        "path": "data\\raw\\20261111T190842894201Z\\shelter_1cc46acb-c6d3-4537-93ef-3ebad039275c.csv",
+        "sha256": "196a58c02cd9f30689dab2a9f249a1b6fce4b013b0be078a94f31a29d6c31dd9",
+        "metadata_modified": "2026-02-20T17:33:05.159394",
+        "bytes": 14814332
+      },
+      {
+        "pipeline": "shelter",
+        "package": "daily-shelter-overnight-service-occupancy-capacity",
+        "resource_id": "da8854b8-e570-4de2-b051-a906b62fe7f8",
+        "resource_name": "daily-shelter-overnight-service-occupancy-capacity-2021",
+        "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/da8854b8-e570-4de2-b051-a906b62fe7f8",
+        "path": "data\\raw\\20261111T190842894201Z\\shelter_da8854b8-e570-4de2-b051-a906b62fe7f8.csv",
+        "sha256": "e297917c87fe07ff80ebb1feb6029752faf1bedf5dd54759180285f17a49e1c1",
+        "metadata_modified": "2026-02-20T17:33:22.293167",
+        "bytes": 15253017
+      },
+      {
+        "pipeline": "waitlist",
+        "package": "centralized-waiting-list-activity-for-social-housing",
+        "resource_id": "825a9665-49cb-4d01-9e29-cb21dba0c4be",
+        "resource_name": "Centralized Waitlist for Social Housing",
+        "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/825a9665-49cb-4d01-9e29-cb21dba0c4be",
+        "path": "data\\raw\\20261111T190842894201Z\\waitlist_825a9665-49cb-4d01-9e29-cb21dba0c4be.csv",
+        "sha256": "57856f4a3dbcb5055ed06c51ea0863ebc60157344bc58cb4302cb254fc9a30bb",
+        "metadata_modified": "2026-10-12T04:19:46.316816",
+        "bytes": 3917
+      },
+      {
+        "pipeline": "supply",
+        "package": "active-affordable-and-social-housing-units",
+        "resource_id": "f8d91828-86dd-42bd-bb0b-0a8e963b6a02",
+        "resource_name": "Social and Affordable Housing",
+        "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/datastore/dump/f8d91828-86dd-42bd-bb0b-0a8e963b6a02",
+        "path": "data\\raw\\20261111T190842894201Z\\supply_f8d91828-86dd-42bd-bb0b-0a8e963b6a02.csv",
+        "sha256": "ec230c9411f57d4cc860f0587b5a288c93716210f7d8eba0d44b73bf90c92dc0",
+        "metadata_modified": "2026-09-28T02:05:08.920596",
+        "bytes": 737
+      }
+    ]
+  },
+  "threshold": 0.95,
+  "code_sha256": {
+    "etl.py": "499eda608c6213ebfbeee6baa88ae2cd54554f330e176a985b38061eed3f2cbc",
+    "models.py": "c2e4b5d63f86419033e57e01450c8a22f8ef2429400cbd5f2156ec05dd3d7555",
+    "report.py": "cd5d10e4b1a06623c77134890c5289c06b6d13eca54ae0637e55a28f57795a2e",
+    "sources.py": "4aea6e966bf42361dc2c0123f2c110e84125bfbb8f1a999fc0e94c172e52e1de",
+    "verify.py": "e733ee5117f2a4423190b90980f55686ad491615d05aba7f7a4f5bb6c1ac0a92",
+    "__init__.py": "42274508d3ae5713c1ef4d33cc4f0581274bc925e256379763893c4a690543cf",
+    "__main__.py": "2945ca25e18d3b62a72e6847ceb1684ed194c2d5c8f645a578a4d6f3ea9a0ded"
+  }
+}

@@ -1,7 +1,0 @@
-measure_key,modality,formula,units,missing_policy
-occupancyrate,toronto_shelter,occupied / capacity for compatible units; capacity > 0,ratio,null for invalid denominator or occupancy
-sectoroccupancy,toronto_shelter,"sum occupied / sum actual capacity within date, sector, unit",ratio,null if any reported program has invalid numeric facts
-backlogvelocity,toronto_waitlist,backlog this quarter minus backlog previous quarter,applications per quarter,null when either quarter is missing
-placementrate,toronto_waitlist,housed this quarter / backlog previous quarter,ratio per quarter,null for missing or zero prior backlog
-unexplainednetchange,toronto_waitlist,backlog change - newreactivated + housed,applications,diagnostic residual; not a measured removals count
-pressureflag,toronto_shelter,occupancyrate >= configured threshold,boolean,undefined for missing rate; provisional threshold
